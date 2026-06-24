@@ -1,26 +1,25 @@
 import pandas as pd
 import os
+from sqlalchemy import create_engine
 
-folder_path = "data/raw"
+engine = create_engine("sqlite:///bluestock_mf.db")
 
-for file in os.listdir(folder_path):
-    if file.endswith(".csv"):
-        path = os.path.join(folder_path, file)
+PROCESSED_PATH = "data/processed"
 
-        df = pd.read_csv(path)
+files = [f for f in os.listdir(PROCESSED_PATH) if f.endswith(".csv")]
 
-        print("\n" + "=" * 50)
-        print(f"FILE: {file}")
-        print("=" * 50)
+for file in files:
+    table_name = file.replace(".csv", "").replace("-", "_")
 
-        print("Shape:")
-        print(df.shape)
+    print(f"Loading {table_name}...")
 
-        print("\nData Types:")
-        print(df.dtypes)
+    df = pd.read_csv(os.path.join(PROCESSED_PATH, file))
 
-        print("\nFirst 5 Rows:")
-        print(df.head())
+    df.to_sql(
+        table_name,
+        engine,
+        if_exists="replace",
+        index=False
+    )
 
-        print("\nMissing Values:")
-        print(df.isnull().sum())
+print("\nDatabase created successfully!")
